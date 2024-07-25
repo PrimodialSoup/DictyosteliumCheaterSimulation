@@ -94,12 +94,10 @@ def submit_form():
             new_split_list = list(map(int, split_list))
             print(new_split_list)
             variables[var_name] = new_split_list
-        # Handles str parameters (this should probably check if its a valid file path but it doesn't)
+        # Handles str parameters (this should probably check if its a valid filepath)
         elif var_name == "output_filepath":
             value = entry_widget.get()
             variables[var_name] = str(value)
-    progressbar = ttk.Progressbar(variable = progress)
-    progressbar.grid(row=15, column=3, columnspan=3, pady=10)
 
     main()
 
@@ -406,7 +404,7 @@ def vegetative_growth(pop_list):
         #Loop through the population
         for cell in pop_copy:
             # Set cell fitness to the average of cheater/resistor fitness, weighted by effectiveness of each
-                cell.fitness = ((1-(variables["c_ch"] * cell.cheater_value()))) + (1-(variables["c_res"] * cell.resistor_value()))/2
+            cell.fitness = ((1-(variables["c_ch"] * cell.cheater_value()))) + (1-(variables["c_res"] * cell.resistor_value()))/2
 
 
         # Extract fitness values from Cell objects
@@ -590,11 +588,6 @@ def developmental_cycle(dpop_list):
     mt2_ratios.append(mt2/len(fruiting_body))
     mt3_ratios.append(mt3/len(fruiting_body))
 
-    if("--param" not in  sys.argv):
-        global progress
-        progress.set(progress.get() + (100/variables["n_dev"]))
-        root.update()
-
     return fruiting_body
 
 def sexual_cycle(sexual_pop):
@@ -674,6 +667,9 @@ def main():
     global mt2_ratios
     global mt3_ratios
     global locus_plot
+
+    progressbar = ttk.Progressbar(maximum=variables["n_dev"]*variables["n_runs"])
+    progressbar.grid(row=15, column=3, columnspan=3, pady=10)
 
     # Initiate graphing lists
     total_ch = []
@@ -756,10 +752,12 @@ def main():
                     pop = vegetative_growth(pop)
                     pop = developmental_cycle(pop)
                 print("Dev round " + str(i) +" of " + str(variables["n_dev"])+ " completed.")
+            progressbar.step()
+            root.update()
 
         # Locus tracking
         for num in range(0, len(locus_plot)):
-            if j ==0:
+            if j == 0:
                 for i in range(0, variables["gene_pairs"]):
                     temp_str = "gene_pair" + str(i)
                     tracker_dict[temp_str][0].append([locus_plot[num][i].ch_count])
@@ -826,12 +824,6 @@ def main():
         print("------------------")
         print("Run " + str(j+1) + " of " + str(variables["n_runs"])+" completed")
         print("------------------")
-
-        if("--param" not in  sys.argv):
-            # Reset loading bar
-            global progress
-            progress.set(0)
-            root.update()
 
     # After all runs are finished, calculate means and confidence intervals
     x_axis_values = list(range(0, variables["n_dev"]+1))
@@ -905,16 +897,15 @@ def main():
         with open(out, "w") as outfile: 
             json.dump(value_dict, outfile)
 
-
     if("--param" not in  sys.argv):
-        # Plot graph
+        # Plot graphs (wild-type tracking commented out as was distracting and not very useful, leaving it here just in case)
         fig, ax = plt.subplots(2) # change to 3 for efficacy
         fig.set_size_inches(12, 8)
 
         # Make patches for legends
         ch_patch = mpatches.Patch(color='red', label='Cheater alleles')
         re_patch = mpatches.Patch(color='blue', label='Resistor alleles')
-        wild_patch = mpatches.Patch(color='black', label='Wild-type alleles')
+        #wild_patch = mpatches.Patch(color='black', label='Wild-type alleles')
 
         mt1_patch = mpatches.Patch(color='red', label='Type 1')
         mt2_patch = mpatches.Patch(color='blue', label='Type 2')
@@ -929,15 +920,13 @@ def main():
         ax[0].fill_between(x_axis_values, (np.array(mean_ch)-np.array(ch_ci)), (np.array(mean_ch)+np.array(ch_ci)), color='red', alpha=.1)
         ax[0].plot(x_axis_values, mean_res, color = "blue")
         ax[0].fill_between(x_axis_values, (np.array(mean_res)-np.array(res_ci)), (np.array(mean_res)+np.array(res_ci)), color='blue', alpha=.1)
-        ax[0].plot(x_axis_values, mean_wild, color = "black")
-        ax[0].fill_between(x_axis_values, (np.array(mean_wild)-np.array(wild_ci)), (np.array(mean_wild)+np.array(wild_ci)), color='black', alpha=.1)
+        #ax[0].plot(x_axis_values, mean_wild, color = "black")
+        #ax[0].fill_between(x_axis_values, (np.array(mean_wild)-np.array(wild_ci)), (np.array(mean_wild)+np.array(wild_ci)), color='black', alpha=.1)
         ax[0].grid()
-        ax[0].legend(handles=[ch_patch, re_patch, wild_patch])
+        ax[0].legend(handles=[ch_patch, re_patch])
 
         # Plot mating types
         ax[1].set_ylabel("Ratio")
-
-
         ax[1].set_ylim([0, 1])
 
         ax[1].plot(x_axis_values, mean_mt1, color = "red")
@@ -985,8 +974,6 @@ if __name__ == "__main__":
 
         root = tk.Tk()
         root.title("Dictyostelium Cheater Simulation")
-
-        progress = tk.IntVar()
 
         entry_widgets = {}
         row_num = 2
