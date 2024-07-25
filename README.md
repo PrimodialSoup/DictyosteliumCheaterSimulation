@@ -7,14 +7,14 @@ In a fresh conda environment (Recommended to avoid incompatibility issues):
 
 1. Install python
 2. Install dependencies by running 'pip install -r requirements.txt'
-3. Run the simulation in GUI mode with 'python Dictysimulator.py'
+3. Run the simulation in GUI mode with 'python DictySimulator.py'
 
 ```
 conda create -n dictysim
 conda activate dictysim
 conda install python
 pip install -r requirements.txt
-python Dictysimulator.py
+python DictySimulator.py
 ```
 
 ## No GUI mode
