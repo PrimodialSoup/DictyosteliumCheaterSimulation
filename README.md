@@ -3,7 +3,7 @@ Python model simulating the dynamics of gene-for-gene cheating and resistance in
 
 
 ## Usage
-In a fresh conda environment ('conda create -n dictysim'): 
+In a fresh conda environment (Recommended to avoid incompatibility issues): 
 
 1. Install python
 2. Install dependencies by running 'pip install -r requirements.txt'
